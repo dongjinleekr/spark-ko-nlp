@@ -24,22 +24,46 @@
 package com.dongjin.spark.konlp
 
 import com.dongjin.spark.konlp.functions._
-import com.dongjin.spark.konlp.types._
 import com.holdenkarau.spark.testing.DataFrameSuiteBase
-import kr.bydelta.koala.POS
+import kr.bydelta.koala.proc.CanTag
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.{StructField, StructType}
 import org.scalatest.FunSuite
 
-class FunctionsSuite extends FunSuite with DataFrameSuiteBase {
+import scala.collection.JavaConverters._
+import scala.language.implicitConversions
 
-  import spark.implicits._
+trait FunctionsSuite extends FunSuite with DataFrameSuiteBase {
+
+  def tagger: CanTag
 
   def makeColumnsNullable(df: DataFrame): DataFrame = {
     val schema = StructType(df.schema.map(f => StructField(f.name, f.dataType, nullable = true)))
     df.sparkSession.createDataFrame(df.rdd, schema)
   }
+
+  def toSentences(str: String): Seq[String] = {
+    tagger.tag(str).asScala.map(_.surfaceString)
+  }
+
+  def toWords(str: String): Seq[String] = {
+    tagger.tag(str).asScala.flatMap { sentence =>
+      sentence.asScala.map(_.getSurface)
+    }
+  }
+
+  def toMorphemes(str: String): Seq[(String, Int)] = {
+    tagger.tag(str).asScala.flatMap { sentence =>
+      sentence.asScala.flatMap { word =>
+        word.asScala.map { morpheme =>
+          (morpheme.getSurface, morpheme.getTag.ordinal)
+        }
+      }
+    }
+  }
+
+  import spark.implicits._
 
   test("ssplit splits into sentences") {
     val text =
@@ -61,7 +85,9 @@ class FunctionsSuite extends FunSuite with DataFrameSuiteBase {
     val actual = df
       .withColumn("wordCount", size(wsplit(col("str"))))
       .select(col("wordCount"))
-    val expected = Seq(4, 5)
+
+    val expected = text
+      .map(str => toWords(str).size)
       .toDF("wordCount")
     assertDataFrameEquals(expected, actual)
   }
@@ -78,41 +104,8 @@ class FunctionsSuite extends FunSuite with DataFrameSuiteBase {
       .withColumn("surface", col("morphemes.surface"))
       .withColumn("pos_id", col("morphemes.pos_id"))
       .select(col("surface"), col("pos_id"))
-    val expected = Seq(
-      ("바람", POS.NNG.ordinal),
-      ("이", POS.JKS.ordinal),
-      ("살짝", POS.MAG.ordinal),
-      ("잠", POS.NNG.ordinal),
-      ("을", POS.JKO.ordinal),
-      ("깨우", POS.VV.ordinal),
-      ("ㄴ", POS.ETM.ordinal),
-      ("꽃잎", POS.NNP.ordinal),
-      ("에", POS.JKB.ordinal),
-      ("좋아하", POS.VV.ordinal),
-      ("아", POS.EC.ordinal),
-      ("이", POS.MM.ordinal),
-      ("말", POS.NNG.ordinal),
-      ("한마디", POS.NNG.ordinal),
-      ("를", POS.JKO.ordinal),
-      ("담", POS.VV.ordinal),
-      ("아서", POS.EC.ordinal),
-      ("어젯밤", POS.NNG.ordinal),
-      ("꼬박", POS.MAG.ordinal),
-      ("새우", POS.VV.ordinal),
-      ("ㄴ", POS.ETM.ordinal),
-      ("나", POS.NP.ordinal),
-      ("의", POS.JKG.ordinal),
-      ("노래", POS.NNG.ordinal),
-      ("에", POS.JKB.ordinal),
-      ("사랑", POS.NNG.ordinal),
-      ("의", POS.JKG.ordinal),
-      ("마법", POS.NNP.ordinal),
-      ("을", POS.JKO.ordinal),
-      ("걷", POS.VV.ordinal),
-      ("어", POS.EC.ordinal),
-      ("보", POS.VX.ordinal),
-      ("네", POS.EC.ordinal)
-    ).toDF("surface", "pos_id")
+
+    val expected = text.flatMap(toMorphemes(_)).toDF("surface", "pos_id")
     assertDataFrameEquals(makeColumnsNullable(expected), makeColumnsNullable(actual))
   }
 }

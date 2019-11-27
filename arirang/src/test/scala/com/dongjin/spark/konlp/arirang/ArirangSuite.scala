@@ -21,28 +21,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.dongjin.spark.konlp
+package com.dongjin.spark.konlp.arirang
 
-import org.apache.spark.sql.Column
+import com.dongjin.spark.konlp.FunctionsSuite
+import kr.bydelta.koala.arirang.Tagger
 
-object functions {
-  /**
-   * 주어진 문자열을 문장 단위로 분할한다.
-   */
-  def ssplit(str: Column): Column = new Column(SentenceSplit(str.expr))
+class ArirangSuite extends FunctionsSuite {
 
-  /**
-   * 주어진 문자열을 단어 단위로 분할한다.
-   */
-  def wsplit(str: Column): Column = new Column(WordSplit(str.expr))
-
-  /**
-   * 주어진 문자열을 형태소 분석한다.
-   */
-  def morphemes(str: Column): Column = new Column(Morphemes(str.expr))
-
-  /**
-   * 주어진 문자열에 포함된 개체들을 리턴한다.
-   */
-  def entries(str: Column): Column = new Column(Entries(str.expr))
+  override lazy val tagger = new Tagger
 }

@@ -1,8 +1,8 @@
 name := "spark-ko-nlp"
 
-organization := "com.dongjin"
+organization in ThisBuild := "com.dongjin"
 
-version := "0.1-SNAPSHOT"
+version in ThisBuild := "0.1-SNAPSHOT"
 
 scalaVersion := "2.12.10"
 
@@ -13,11 +13,26 @@ val koalaVersion = "2.0.5"
 val koalaScalaVersion = "2.0.2"
 val scalatestVersion = "3.0.8"
 
-resolvers += "jitpack" at "https://jitpack.io/"
+val commonSettings = Seq(
+  autoScalaLibrary := true,
+  javacOptions := javacOptions.value ++ Seq("-source", "1.8", "-target", "1.8"),
+  parallelExecution in Test := false,
+  fork in Test := true,
+  javaOptions := javaOptions.value ++ Seq("-Xms512M", "-Xmx2048M", "-XX:MaxPermSize=2048M", "-XX:+CMSClassUnloadingEnabled"),
+  resolvers := resolvers.value ++ Seq("jitpack" at "https://jitpack.io/")
+)
 
-libraryDependencies ++= Seq(
-  "kr.bydelta" % "koalanlp-kmr" % koalaVersion,
+// root project
+lazy val root = (project in file("."))
+  .settings(publishArtifact := false)
+  .aggregate(konlp, arirang, kmr)
+  .dependsOn(konlp, arirang, kmr)
+
+lazy val commonDependencies = Seq(
   "kr.bydelta" %% "koalanlp-scala" % koalaScalaVersion,
+  // ("kr.bydelta" % "koalanlp-daon" % koalaScalaVersion artifacts Artifact("jar", "assembly")) % Test,
+  // "kr.bydelta" % "koalanlp-eunjeon" % koalaScalaVersion % Test,
+  // ("kr.bydelta" % "koalanlp-rhino" % koalaScalaVersion artifacts Artifact("jar", "assembly")) % Test,
   "org.apache.spark" %% "spark-core" % sparkVersion % Provided,
   "org.apache.spark" %% "spark-sql" % sparkVersion % Provided,
   "com.holdenkarau" %% "spark-testing-base" % s"${sparkVersion}_0.12.0" % Test,
@@ -26,15 +41,30 @@ libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % scalatestVersion % Test
 )
 
-javacOptions ++= Seq("-source", "1.8", "-target", "1.8")
+// konlp project
+lazy val konlp = (project in file("konlp"))
+  .settings(commonSettings,
+    libraryDependencies := commonDependencies)
 
-parallelExecution in Test := false
+// arirang project
+lazy val arirang = (project in file("arirang"))
+  .settings(commonSettings,
+    libraryDependencies := commonDependencies ++ Seq(
+      ("kr.bydelta" % "koalanlp-arirang" % koalaScalaVersion artifacts Artifact("jar", "assembly")) % Test
+    ),
+    publishArtifact := false)
+  .dependsOn(konlp % "test->test")
 
-fork in Test := true
-javaOptions ++= Seq("-Xms512M", "-Xmx2048M", "-XX:MaxPermSize=2048M", "-XX:+CMSClassUnloadingEnabled")
+// kmr project
+lazy val kmr = (project in file("kmr"))
+  .settings(commonSettings,
+    libraryDependencies := commonDependencies ++ Seq(
+      "kr.bydelta" % "koalanlp-kmr" % koalaScalaVersion % Test
+    ),
+    publishArtifact := false)
+  .dependsOn(konlp % "test->test")
 
 // sbt-sonatype configuration
-
 homepage := Some(url("https://github.com/dongjinleekr/spark-ko-nlp"))
 scmInfo := Some(ScmInfo(url("https://github.com/dongjinleekr/spark-ko-nlp"),
   "git@github.com:dongjinleekr/spark-ko-nlp.git"))

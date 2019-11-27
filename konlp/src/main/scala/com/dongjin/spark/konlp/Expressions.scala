@@ -24,7 +24,7 @@
 package com.dongjin.spark.konlp
 
 import com.dongjin.spark.konlp.types._
-import kr.bydelta.koala.kmr.Tagger
+import kr.bydelta.koala.proc.CanTag
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, ImplicitCastInputTypes}
@@ -36,7 +36,29 @@ import scala.collection.JavaConverters._
 
 
 private[konlp] object Expressions {
-  val tagger: Tagger = new Tagger
+  private val SUPPORTED_TAGGER_CLASSES = Seq(
+    // 아리랑
+    "kr.bydelta.koala.arirang.Tagger",
+    //
+    "kr.bydelta.koala.daon.Tagger",
+    // 은전 한 닢
+    "kr.bydelta.koala.eunjeon.Tagger",
+    // 코모란
+    "kr.bydelta.koala.kmr.Tagger",
+    // rhino
+    "kr.bydelta.koala.rhino.Tagger")
+
+  lazy val DETECTED_TAGGER_CLASSES = SUPPORTED_TAGGER_CLASSES.flatMap { className =>
+    try {
+      Some(Class.forName(className).asInstanceOf[Class[CanTag]])
+    } catch {
+      case _: ClassNotFoundException => None
+    }
+  }
+
+  require(DETECTED_TAGGER_CLASSES.size == 1, s"Multiple Tagger implementations in classpath: $DETECTED_TAGGER_CLASSES")
+
+  val tagger: CanTag = DETECTED_TAGGER_CLASSES(0).newInstance
 }
 
 private[konlp] case class SentenceSplit(expr: Expression)
@@ -63,6 +85,8 @@ private[konlp] case class SentenceSplit(expr: Expression)
       new GenericArrayData(sentences)
     }
   }
+
+  override def prettyName: String = "ssplit"
 }
 
 private[konlp] case class WordSplit(expr: Expression)
@@ -91,6 +115,8 @@ private[konlp] case class WordSplit(expr: Expression)
       new GenericArrayData(words)
     }
   }
+
+  override def prettyName: String = "wsplit"
 }
 
 private[konlp] case class Morphemes(expr: Expression)
@@ -121,34 +147,28 @@ private[konlp] case class Morphemes(expr: Expression)
       new GenericArrayData(morphemes)
     }
   }
+
+  override def prettyName: String = "morphemes"
 }
 
-private[konlp] case class Entries(expr: Expression)
-  extends Expression with ImplicitCastInputTypes with CodegenFallback {
+/*private[konlp] case class HasTagOf(left: Expression, right: Expression)
+  extends BinaryExpression with ImplicitCastInputTypes {
 
   override def nullable: Boolean = false
 
-  override def dataType: DataType =
-    ArrayType(MorphemeType, containsNull = false)
+  override def dataType: DataType = BooleanType
 
-  override def inputTypes: Seq[DataType] = Seq(StringType)
-
-  override def children: Seq[Expression] = expr :: Nil
-
-  override def eval(input: InternalRow): Any = {
-    val str = expr.eval(input)
-    if (str == null) {
-      null
-    } else {
-      val value = str.asInstanceOf[UTF8String].toString
-      val morphemes = Expressions.tagger.tag(value).asScala.flatMap { sentence =>
-        sentence.asScala.flatMap { word =>
-          word.asScala.map { morpheme =>
-            InternalRow(UTF8String.fromString(morpheme.getSurface), morpheme.getTag.ordinal)
-          }
+  override def inputTypes: Seq[AbstractDataType] = {
+    (left.dataType, right.dataType) match {
+      case (_, NullType) => Seq.empty
+      case (ArrayType(e1, hasNull), e2) =>
+        TypeCoercion.findTightestCommonType(e1, e2) match {
+          case Some(dt) => Seq(ArrayType(dt, hasNull), dt)
+          case _ => Seq.empty
         }
-      }
-      new GenericArrayData(morphemes)
+      case _ => Seq.empty
     }
   }
-}
+
+  override def prettyName: String = "hasTagOf"
+}*/
