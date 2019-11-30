@@ -25,14 +25,11 @@ val commonSettings = Seq(
 // root project
 lazy val root = (project in file("."))
   .settings(publishArtifact := false)
-  .aggregate(konlp, arirang, kmr)
-  .dependsOn(konlp, arirang, kmr)
+  .aggregate(konlp, arirang, daon, kmr, rhino)
+  .dependsOn(konlp, arirang, daon, kmr, rhino)
 
 lazy val commonDependencies = Seq(
   "kr.bydelta" %% "koalanlp-scala" % koalaScalaVersion,
-  // ("kr.bydelta" % "koalanlp-daon" % koalaScalaVersion artifacts Artifact("jar", "assembly")) % Test,
-  // "kr.bydelta" % "koalanlp-eunjeon" % koalaScalaVersion % Test,
-  // ("kr.bydelta" % "koalanlp-rhino" % koalaScalaVersion artifacts Artifact("jar", "assembly")) % Test,
   "org.apache.spark" %% "spark-core" % sparkVersion % Provided,
   "org.apache.spark" %% "spark-sql" % sparkVersion % Provided,
   "com.holdenkarau" %% "spark-testing-base" % s"${sparkVersion}_0.12.0" % Test,
@@ -55,11 +52,29 @@ lazy val arirang = (project in file("arirang"))
     publishArtifact := false)
   .dependsOn(konlp % "test->test")
 
+// daon project
+lazy val daon = (project in file("daon"))
+  .settings(commonSettings,
+    libraryDependencies := commonDependencies ++ Seq(
+      ("kr.bydelta" % "koalanlp-daon" % koalaScalaVersion artifacts Artifact("jar", "assembly")) % Test
+    ),
+    publishArtifact := false)
+  .dependsOn(konlp % "test->test")
+
 // kmr project
 lazy val kmr = (project in file("kmr"))
   .settings(commonSettings,
     libraryDependencies := commonDependencies ++ Seq(
       "kr.bydelta" % "koalanlp-kmr" % koalaScalaVersion % Test
+    ),
+    publishArtifact := false)
+  .dependsOn(konlp % "test->test")
+
+// rhino project
+lazy val rhino = (project in file("rhino"))
+  .settings(commonSettings,
+    libraryDependencies := commonDependencies ++ Seq(
+      ("kr.bydelta" % "koalanlp-rhino" % koalaScalaVersion artifacts Artifact("jar", "assembly")) % Test
     ),
     publishArtifact := false)
   .dependsOn(konlp % "test->test")
