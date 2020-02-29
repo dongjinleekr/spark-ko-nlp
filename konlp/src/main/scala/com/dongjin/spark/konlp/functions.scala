@@ -23,7 +23,12 @@
  */
 package com.dongjin.spark.konlp
 
+import com.dongjin.spark.konlp.types.MorphemeType
+import kr.bydelta.koala.POS
 import org.apache.spark.sql.Column
+import org.apache.spark.sql.functions.{array_contains, lit}
+
+import scala.collection.JavaConverters._
 
 object functions {
   /**
@@ -42,7 +47,56 @@ object functions {
   def morphemes(str: Column): Column = new Column(Morphemes(str.expr))
 
   /**
-   * 주어진 형태소 분석 결과가 원하는 형태소 유형 집합에 포함되는지를 판별한다.
+   * 주어진 형태소 분석 결과가 체언인지를 판별한다.
    */
-  // def hasTagOf(str: Column, tags: Column): Column = new Column(HasTagOf(str.expr, tags.expr))
+  def isNoun(morpheme: Column): Column =
+    hasTagOf(morpheme, lit(POS.getNOUNS.asScala.map(_.ordinal).toArray))
+
+  /**
+   * 주어진 형태소 분석 결과가 용언인지를 판별한다.
+   */
+  def isPredicate(morpheme: Column): Column =
+    hasTagOf(morpheme, lit(POS.getPREDICATES.asScala.map(_.ordinal).toArray))
+
+  /**
+   * 주어진 형태소 분석 결과가 수식언인지를 판별한다.
+   */
+  def isModifier(morpheme: Column): Column =
+    hasTagOf(morpheme, lit(POS.getMODIFIERS.asScala.map(_.ordinal).toArray))
+
+  /**
+   * 주어진 형태소 분석 결과가 관계언인지를 판별한다.
+   */
+  def isPostPosition(morpheme: Column): Column =
+  hasTagOf(morpheme, lit(POS.getPOSTPOSITIONS.asScala.map(_.ordinal).toArray))
+
+  /**
+   * 주어진 형태소 분석 결과가 어미인지를 판별한다.
+   */
+  def isEnding(morpheme: Column): Column =
+  hasTagOf(morpheme, lit(POS.getENDINGS.asScala.map(_.ordinal).toArray))
+
+  /**
+   * 주어진 형태소 분석 결과가 접사인지를 판별한다.
+   */
+  def isAffix(morpheme: Column): Column =
+  hasTagOf(morpheme, lit(POS.getAFFIXES.asScala.map(_.ordinal).toArray))
+
+  /**
+   * 주어진 형태소 분석 결과가 기호인지를 판별한다.
+   */
+  def isSymbol(morpheme: Column): Column =
+  hasTagOf(morpheme, lit(POS.getSYMBOLS.asScala.map(_.ordinal).toArray))
+
+  /**
+   * 주어진 형태소 분석 결과가 미확인 품사인지를 판별한다.
+   */
+  def isUnknown(morpheme: Column): Column =
+  hasTagOf(morpheme, lit(POS.getUNKNOWNS.asScala.map(_.ordinal).toArray))
+
+  /**
+   * 주어진 형태소 분석 결과가 주어진 형태소 유형 집합에 포함되는지를 판별한다.
+   */
+  def hasTagOf(morpheme: Column, tags: Column): Column =
+    array_contains(tags, morpheme.cast(MorphemeType).apply("pos_id"))
 }
