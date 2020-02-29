@@ -2,7 +2,7 @@ name := "spark-ko-nlp"
 
 ThisBuild / organization := "com.dongjin"
 
-ThisBuild / version := "0.1-SNAPSHOT"
+ThisBuild / version := "0.5"
 
 ThisBuild / scalaVersion := "2.12.10"
 
