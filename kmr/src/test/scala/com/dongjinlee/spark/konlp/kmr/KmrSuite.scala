@@ -21,12 +21,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.dongjin.spark.konlp.rhino
+package com.dongjinlee.spark.konlp.kmr
 
-import com.dongjin.spark.konlp.FunctionsSuite
-import kr.bydelta.koala.rhino.Tagger
+import com.dongjinlee.spark.konlp.FunctionsSuite
+import kr.bydelta.koala.kmr.Tagger
 
-class RhinoSuite extends FunctionsSuite {
+class KmrSuite extends FunctionsSuite {
 
   override lazy val tagger = new Tagger
 }

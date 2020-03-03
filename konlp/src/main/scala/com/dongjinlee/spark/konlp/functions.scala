@@ -21,9 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.dongjin.spark.konlp
+package com.dongjinlee.spark.konlp
 
-import com.dongjin.spark.konlp.types.MorphemeType
+import types.MorphemeType
 import kr.bydelta.koala.POS
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.functions.{array_contains, lit}

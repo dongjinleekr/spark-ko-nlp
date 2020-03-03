@@ -1,6 +1,6 @@
-name := "spark-ko-nlp"
+name := "spark-ko-nlp-parent"
 
-ThisBuild / organization := "com.dongjin"
+ThisBuild / organization := "com.dongjinlee"
 
 ThisBuild / version := "0.5"
 
@@ -54,7 +54,7 @@ lazy val root = (project in file("."))
 
 // konlp project
 lazy val konlp = (project in file("konlp"))
-  .settings(commonSettings,
+  .settings(commonSettings ++ { name := "spark-ko-nlp" },
     libraryDependencies ++= commonDependencies)
 
 // arirang project
@@ -94,16 +94,16 @@ lazy val rhino = (project in file("rhino"))
   .dependsOn(konlp % "test->test")
 
 // sbt-sonatype configuration
-homepage := Some(url("https://github.com/dongjinleekr/spark-ko-nlp"))
-scmInfo := Some(ScmInfo(url("https://github.com/dongjinleekr/spark-ko-nlp"),
+ThisBuild / homepage := Some(url("https://github.com/dongjinleekr/spark-ko-nlp"))
+ThisBuild / scmInfo := Some(ScmInfo(url("https://github.com/dongjinleekr/spark-ko-nlp"),
   "git@github.com:dongjinleekr/spark-ko-nlp.git"))
-developers := List(Developer("username",
+ThisBuild / developers := List(Developer("dongjinlee",
   "Lee Dongjin",
   "dongjin@apache.org",
   url("https://github.com/dongjinleekr")))
-licenses += ("MIT", url("https://opensource.org/licenses/MIT"))
+ThisBuild / licenses += ("MIT", url("https://opensource.org/licenses/MIT"))
 
-publishTo := {
+ThisBuild / publishTo := {
   val nexus = "https://oss.sonatype.org/"
   if (isSnapshot.value)
     Some("snapshots" at nexus + "content/repositories/snapshots")

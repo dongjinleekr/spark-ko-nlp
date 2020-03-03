@@ -21,12 +21,20 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.dongjin.spark.konlp.arirang
+package com.dongjinlee.spark.konlp
 
-import com.dongjin.spark.konlp.FunctionsSuite
-import kr.bydelta.koala.arirang.Tagger
+import org.apache.spark.sql.types.{IntegerType, StringType, StructField, StructType}
 
-class ArirangSuite extends FunctionsSuite {
-
-  override lazy val tagger = new Tagger
+object types {
+  /**
+   * 형태소 분석 결과. 아래와 같은 요소들을 가진다:
+   *
+   * - surface: 표면형.
+   * - pos_id: 세종 품사표기 표준안 id.
+   */
+  val MorphemeType: StructType = StructType(
+    StructField("surface", StringType, false) ::
+      StructField("pos_id", IntegerType, false) ::
+      Nil
+  )
 }

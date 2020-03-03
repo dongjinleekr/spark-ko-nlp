@@ -21,9 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.dongjin.spark.konlp
+package com.dongjinlee.spark.konlp
 
-import com.dongjin.spark.konlp.functions._
+import functions._
 import com.holdenkarau.spark.testing.DataFrameSuiteBase
 import kr.bydelta.koala.POS
 import kr.bydelta.koala.proc.CanTag

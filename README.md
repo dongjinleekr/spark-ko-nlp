@@ -6,8 +6,8 @@ spark-ko-nlp
 # 빠른 시작
 
 ```scala
-import com.dongjin.spark.konlp.functions._
-import com.dongjin.spark.konlp.types._
+import com.dongjinlee.spark.konlp.functions._
+import com.dongjinlee.spark.konlp.types._
 import org.apache.spark.sql.functions._
 
 ...
