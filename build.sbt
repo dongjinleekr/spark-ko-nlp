@@ -21,7 +21,6 @@ lazy val commonSettings = Seq(
 lazy val dependencies =
   new {
     val sparkVersion = "2.4.3"
-    val koalaVersion = "2.0.5"
     val koalaScalaVersion = "2.0.2"
     val scalatestVersion = "3.0.8"
 
